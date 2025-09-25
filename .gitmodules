@@ -1,0 +1,3 @@
+[submodule "Game-Base-Module"]
+	path = Game-Base-Module
+	url = https://github.com/NimaFthi/Game-Base.git
