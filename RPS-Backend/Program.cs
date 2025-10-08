@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RPS_Backend.DB;
 using RPS_Backend.Models;
@@ -12,15 +13,16 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddSingleton<UserService>();
-        builder.Services.AddSingleton<JwtTokenGenerator>();
-        builder.Services.AddSingleton<AuthService>();
-        
-        builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
-        builder.Services.Configure<GameSettings>(builder.Configuration.GetSection("GameSettings")); //TODO : Move this into data base instead of app settings
-        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+        builder.Services.AddControllers();
 
-        builder.Services.AddDbContext<ApplicationDBContext>();
+        builder.Services.AddScoped<UserService>();
+        builder.Services.AddScoped<AuthService>();
+        builder.Services.AddSingleton<JwtTokenGenerator>();
+        
+        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+        builder.Services.Configure<GameSettings>(builder.Configuration.GetSection("GameSettings")); //TODO : Move this into data base instead of app settings
+
+        builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseNpgsql(builder.Configuration.GetSection("ConnectionStrings")["Postgres"]));
         
         var app = builder.Build();
         
