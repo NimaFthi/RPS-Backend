@@ -4,6 +4,7 @@ using RPS_Backend.DB;
 using RPS_Backend.Models;
 using RPS_Backend.Systems.Authentication;
 using RPS_Backend.Systems.User;
+using RPS_Backend.WebSocket;
 
 namespace RPS_Backend;
 
@@ -17,7 +18,10 @@ public class Program
 
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<AuthService>();
+        builder.Services.AddSingleton<WebSocketConnectionManager>();
+        builder.Services.AddSingleton<WebSocketServer>();
         builder.Services.AddSingleton<JwtTokenGenerator>();
+        builder.Services.AddTransient<WebSocketMiddleware>();
         
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
         builder.Services.Configure<GameSettings>(builder.Configuration.GetSection("GameSettings")); //TODO : Move this into data base instead of app settings
@@ -25,6 +29,9 @@ public class Program
         builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseNpgsql(builder.Configuration.GetSection("ConnectionStrings")["Postgres"]));
         
         var app = builder.Build();
+
+        app.UseWebSockets();
+        app.UseMiddleware<WebSocketMiddleware>();
         
         app.MapControllers();
 
