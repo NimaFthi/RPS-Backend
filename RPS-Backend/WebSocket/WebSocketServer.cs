@@ -58,8 +58,10 @@ public class WebSocketServer
             {
                 case WebSocketMessageTypes.Ping:
                     await SendMessageAsync(connectionId, JsonConvert.SerializeObject(
-                        new WebSocketMessage(WebSocketMessageTypes.Pong,
-                            JsonConvert.SerializeObject(DateTime.UtcNow))));
+                        new WebSocketMessage()
+                        {
+                            Type = WebSocketMessageTypes.Pong
+                        }));
                     break;
                 case WebSocketMessageTypes.GetInitData:
                     break;
@@ -115,11 +117,9 @@ public class WebSocketServer
             CancellationToken.None);
     }
 
-    public struct WebSocketMessage(
-        WebSocketMessageTypes type,
-        string data)
+    public class WebSocketMessage
     {
-        public WebSocketMessageTypes Type => type;
-        public string Data => data;
+        public WebSocketMessageTypes Type { get; set; }
+        public string Data { get; set; }
     }
 }

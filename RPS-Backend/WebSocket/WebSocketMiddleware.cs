@@ -67,7 +67,7 @@ public class WebSocketMiddleware : IMiddleware
             }, out SecurityToken validatedToken);
 
             // Retrieve DeviceGuid claim
-            var guidClaim = principal.Claims.FirstOrDefault(c => c.Type == "DeviceGuid")?.Value;
+            var guidClaim = principal.Claims.FirstOrDefault(c => c.Type == "deviceGuid")?.Value;
             if (guidClaim != null)
             {
                 deviceGuid = Guid.Parse(guidClaim);
