@@ -38,12 +38,12 @@ public class WebSocketMiddleware : IMiddleware
         }
 
         var socket = await context.WebSockets.AcceptWebSocketAsync();
-        _connectionManager.AddConnection(deviceGuid.ToString(), socket);
+        await _connectionManager.AddConnectionAsync(deviceGuid.ToString(), socket);
 
         // Delegate management to WebSocketServer
         await _server.HandleClientAsync(deviceGuid.ToString(), socket);
 
-        _connectionManager.RemoveConnection(deviceGuid.ToString());
+        await _connectionManager.RemoveConnectionAsync(deviceGuid.ToString(), "");
     }
 
     private bool ValidateToken(string token, out Guid deviceGuid)

@@ -7,14 +7,27 @@ public class WebSocketConnectionManager
 {
     private ConcurrentDictionary<string, WebSocket> _connections = new();
 
-    public void AddConnection(string connectionId, WebSocket socket)
+    public async Task AddConnectionAsync(string connectionId, WebSocket socket)
     {
+        await RemoveConnectionAsync(connectionId, "New socket");
         _connections[connectionId] = socket;
     }
 
-    public void RemoveConnection(string connectionId)
+    public async Task RemoveConnectionAsync(string connectionId, string reason)
     {
-        _connections.TryRemove(connectionId, out _);
+        if (_connections.TryRemove(connectionId, out var socket))
+        {
+            if (socket is {State: WebSocketState.Open or WebSocketState.CloseReceived})
+            {
+                try
+                {
+                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, reason, CancellationToken.None);
+                }
+                catch{}
+            }
+            
+            socket.Dispose();
+        }
     }
 
     public void GetSocketById(string connectionId, out WebSocket? connectionSocket)
