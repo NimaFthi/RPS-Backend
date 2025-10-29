@@ -36,7 +36,7 @@ public class WebSocketMiddleware : IMiddleware
             context.Response.StatusCode = 401;
             return;
         }
-
+        
         var socket = await context.WebSockets.AcceptWebSocketAsync();
         await _connectionManager.AddConnectionAsync(deviceGuid.ToString(), socket);
 
@@ -79,32 +79,6 @@ public class WebSocketMiddleware : IMiddleware
         catch
         {
             return false;
-        }
-    }
-
-    private async Task ReceiveMessages(string connectionId, WebSocket socket)
-    {
-        var buffer = new byte[1024 * 4];
-
-        while (socket.State == WebSocketState.Open)
-        {
-            var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-            if (result.MessageType == WebSocketMessageType.Close)
-            {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by server",
-                    CancellationToken.None);
-            }
-            else
-            {
-                var receivedText = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                Console.WriteLine($"[WebSocket]: Message from {connectionId} → {receivedText}");
-
-                // Echo test (send back)
-                var echoBytes = Encoding.UTF8.GetBytes($"Echo: {receivedText}");
-                await socket.SendAsync(new ArraySegment<byte>(echoBytes), WebSocketMessageType.Text, true,
-                    CancellationToken.None);
-            }
         }
     }
 }

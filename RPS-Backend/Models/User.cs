@@ -1,3 +1,5 @@
+using RPS_Backend.Systems.User;
+
 namespace RPS_Backend.Models;
 
 public class User
@@ -11,4 +13,16 @@ public class User
     public int LossesCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime LastLogin { get; set; }
+
+    public UserProfile ToUserProfile()
+    {
+        return new UserProfile
+        {
+            UserId = UserId,
+            Username = Username,
+            CoinsCount = CoinsCount,
+            WinsCount = WinsCount,
+            LossesCount = LossesCount
+        };
+    }
 }

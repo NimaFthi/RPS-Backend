@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RPS_Backend.DB;
 using RPS_Backend.Models;
+using RPS_Backend.Systems;
 using RPS_Backend.Systems.Authentication;
 using RPS_Backend.Systems.User;
 using RPS_Backend.WebSocket;
@@ -16,8 +17,9 @@ public class Program
 
         builder.Services.AddControllers();
 
-        builder.Services.AddScoped<UserService>();
-        builder.Services.AddScoped<AuthService>();
+        builder.Services.AddSingleton<UserService>();
+        builder.Services.AddSingleton<AuthService>();
+        builder.Services.AddSingleton<CommunicationService>();
         builder.Services.AddSingleton<WebSocketConnectionManager>();
         builder.Services.AddSingleton<WebSocketServer>();
         builder.Services.AddSingleton<JwtTokenGenerator>();

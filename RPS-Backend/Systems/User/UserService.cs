@@ -8,14 +8,14 @@ namespace RPS_Backend.Systems.User;
 
 public class UserService
 {
+    private IServiceProvider _serviceProvider;
     private readonly GameSettings _gameSettings;
-    private readonly ApplicationDBContext _db;
     private readonly ILogger<UserService> _logger;
 
-    public UserService(ApplicationDBContext db, IOptions<GameSettings> gameSettings, ILogger<UserService> logger)
+    public UserService(IServiceProvider serviceProvider, IOptions<GameSettings> gameSettings, ILogger<UserService> logger)
     {
+        _serviceProvider = serviceProvider;
         _gameSettings = gameSettings.Value;
-        _db = db;
         _logger = logger;
     }
 
@@ -23,7 +23,24 @@ public class UserService
     {
         try
         {
-            return await _db.Users.FirstOrDefaultAsync(u => u.DeviceGuid == deviceGuid);
+            using var scope = _serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+            return await db.Users.FirstOrDefaultAsync(u => u.DeviceGuid == deviceGuid);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while fetching user with DeviceGuid: {DeviceGuid}", deviceGuid);
+            return null;
+        }
+    }
+    public async Task<UserProfile?> GetUserProfileByGuidAsync(Guid deviceGuid)
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+            var user = await db.Users.FirstOrDefaultAsync(u => u.DeviceGuid == deviceGuid);
+            return user?.ToUserProfile();
         }
         catch (Exception ex)
         {
@@ -36,7 +53,9 @@ public class UserService
     {
         try
         {
-            return await _db.Users.AnyAsync(u => u.DeviceGuid == deviceGuid);
+            using var scope = _serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+            return await db.Users.AnyAsync(u => u.DeviceGuid == deviceGuid);
         }
         catch (Exception ex)
         {
@@ -49,12 +68,14 @@ public class UserService
     {
         try
         {
-            var result = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            using var scope = _serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+            var result = await db.Users.FirstOrDefaultAsync(u => u.UserId == userId);
             if (result == null)
                 return false;
 
             result.LastLogin = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
+            await db.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)
@@ -68,8 +89,11 @@ public class UserService
     {
         try
         {
-            var result = await _db.Users.AddAsync(GetNewUser(deviceGuid));
-            await _db.SaveChangesAsync();
+            using var scope = _serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+            
+            var result = await db.Users.AddAsync(GetNewUser(deviceGuid));
+            await db.SaveChangesAsync();
             return result.Entity;
         }
         catch (Exception ex)

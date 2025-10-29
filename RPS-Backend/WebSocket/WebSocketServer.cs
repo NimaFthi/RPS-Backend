@@ -2,12 +2,14 @@
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using RPS_Backend.Systems;
 
 namespace RPS_Backend.WebSocket;
 
 public class WebSocketServer
 {
     private readonly WebSocketConnectionManager _connectionManager;
+    private readonly CommunicationService _communicationService;
     private readonly ILogger<WebSocketServer> _logger;
 
     private readonly ConcurrentDictionary<string, DateTime> _lastHeartbeat =
@@ -17,9 +19,10 @@ public class WebSocketServer
 
     private static readonly TimeSpan HeartbeatCheckInterval = TimeSpan.FromSeconds(10);
 
-    public WebSocketServer(WebSocketConnectionManager connectionManager, ILogger<WebSocketServer> logger)
+    public WebSocketServer(WebSocketConnectionManager connectionManager, CommunicationService communicationService,ILogger<WebSocketServer> logger)
     {
         _connectionManager = connectionManager;
+        _communicationService = communicationService;
         _logger = logger;
 
         _ = Task.Run(HeartbeatMonitorLoop);
@@ -67,46 +70,22 @@ public class WebSocketServer
         try
         {
             var payload = JsonConvert.DeserializeObject<WebSocketMessage>(rawMessage);
-            if (payload == null)
-                return;
+            if (payload == null) return;
 
-            switch (payload.Type)
+            if (payload.Type == WebSocketMessageTypes.Ping)
             {
-                case WebSocketMessageTypes.Ping:
-                    _lastHeartbeat[connectionId] = DateTime.UtcNow;
+                _lastHeartbeat[connectionId] = DateTime.UtcNow;
 
-                    await SendMessageAsync(connectionId,
-                        JsonConvert.SerializeObject(new WebSocketMessage
-                        {
-                            Type = WebSocketMessageTypes.Pong
-                        }));
-                    break;
-                case WebSocketMessageTypes.GetInitData:
-                    break;
-                case WebSocketMessageTypes.GetUserProfile:
-                    break;
-                case WebSocketMessageTypes.RequestMatch:
-                    break;
-                case WebSocketMessageTypes.CancelMatch:
-                    break;
-                case WebSocketMessageTypes.MatchFound:
-                    break;
-                case WebSocketMessageTypes.LeaveMatch:
-                    break;
-                case WebSocketMessageTypes.StartMatch:
-                    break;
-                case WebSocketMessageTypes.EndMatch:
-                    break;
-                case WebSocketMessageTypes.StartRound:
-                    break;
-                case WebSocketMessageTypes.RoundResult:
-                    break;
-                case WebSocketMessageTypes.Move:
-                    break;
-                default:
-                    _logger.LogWarning($"Unknown message type from {connectionId}: {payload.Type}");
-                    break;
+                await SendMessageAsync(connectionId,
+                    JsonConvert.SerializeObject(new WebSocketMessage
+                    {
+                        Type = WebSocketMessageTypes.Pong
+                    }));
+                
+                return;
             }
+            
+            await _communicationService.ProcessRequest(this ,connectionId ,payload);
         }
         catch (JsonException je)
         {
