@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using RPS_Backend.Systems.GetInitData;
 using RPS_Backend.Systems.User;
 using RPS_Backend.WebSocket;
 
@@ -6,29 +7,28 @@ namespace RPS_Backend.Systems;
 
 public class CommunicationService
 {
+    private GetInitDataService _getInitDataService;
     private UserService _userService;
     
-    public CommunicationService(UserService userService)
+    public CommunicationService(GetInitDataService getInitDataService,UserService userService)
     {
+        _getInitDataService = getInitDataService;
         _userService = userService;
     }
 
     public async Task ProcessRequest(WebSocketServer webSocketServer ,string connectionId, WebSocketServer.WebSocketMessage message)
     {
+        string json = "";
+        
         switch (message.Type)
         {
             case WebSocketMessageType.GetInitData:
+                var initData = await  _getInitDataService.GetInitData();
+                json = JsonConvert.SerializeObject(initData);
                 break;
             case WebSocketMessageType.GetUserProfile:
                 var userProfile = await _userService.GetUserProfileByGuidAsync(Guid.Parse((ReadOnlySpan<char>)connectionId));
-                var json = JsonConvert.SerializeObject(userProfile);
-                var jsonMessage = new WebSocketServer.WebSocketMessage
-                {
-                    RequestID = message.RequestID,
-                    Type = WebSocketMessageType.GetUserProfile,
-                    Data = json
-                };
-                await webSocketServer.SendMessageAsync(connectionId, JsonConvert.SerializeObject(jsonMessage));
+                json = JsonConvert.SerializeObject(userProfile);
                 break;
             case WebSocketMessageType.RequestMatch:
                 break;
@@ -49,5 +49,15 @@ public class CommunicationService
             case WebSocketMessageType.Move:
                 break;
         }
+        
+        if(string.IsNullOrEmpty(json)) return;
+        
+        var respondMessage = new WebSocketServer.WebSocketMessage
+        {
+            RequestID = message.RequestID,
+            Type = WebSocketMessageType.GetUserProfile,
+            Data = json
+        };
+        await webSocketServer.SendMessageAsync(connectionId, JsonConvert.SerializeObject(respondMessage));
     }
 }

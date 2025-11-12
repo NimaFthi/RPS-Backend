@@ -4,6 +4,7 @@ using RPS_Backend.DB;
 using RPS_Backend.Models;
 using RPS_Backend.Systems;
 using RPS_Backend.Systems.Authentication;
+using RPS_Backend.Systems.GetInitData;
 using RPS_Backend.Systems.User;
 using RPS_Backend.WebSocket;
 
@@ -17,6 +18,7 @@ public class Program
 
         builder.Services.AddControllers();
 
+        builder.Services.AddSingleton<GetInitDataService>();
         builder.Services.AddSingleton<UserService>();
         builder.Services.AddSingleton<AuthService>();
         builder.Services.AddSingleton<CommunicationService>();
