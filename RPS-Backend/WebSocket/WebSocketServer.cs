@@ -40,7 +40,7 @@ public class WebSocketServer
             while (socket.State == WebSocketState.Open)
             {
                 var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                if (result.MessageType == WebSocketMessageType.Close)
+                if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)
                 {
                     _logger.LogInformation($"Client {connectionId} closed connection.");
                     await _connectionManager.RemoveConnectionAsync(connectionId, "Client closed connection.");
@@ -72,14 +72,14 @@ public class WebSocketServer
             var payload = JsonConvert.DeserializeObject<WebSocketMessage>(rawMessage);
             if (payload == null) return;
 
-            if (payload.Type == WebSocketMessageTypes.Ping)
+            if (payload.Type == WebSocketMessageType.Ping)
             {
                 _lastHeartbeat[connectionId] = DateTime.UtcNow;
 
                 await SendMessageAsync(connectionId,
                     JsonConvert.SerializeObject(new WebSocketMessage
                     {
-                        Type = WebSocketMessageTypes.Pong
+                        Type = WebSocketMessageType.Pong
                     }));
                 
                 return;
@@ -105,7 +105,7 @@ public class WebSocketServer
 
         var bytes = Encoding.UTF8.GetBytes(message);
         await socket.SendAsync(new ArraySegment<byte>(bytes),
-                               WebSocketMessageType.Text,
+                               System.Net.WebSockets.WebSocketMessageType.Text,
                                true,
                                CancellationToken.None);
     }
@@ -156,7 +156,10 @@ public class WebSocketServer
 
     public class WebSocketMessage
     {
-        public WebSocketMessageTypes Type { get; set; }
-        public string? Data { get; set; }
+        public string RequestID { get; set; }
+        public WebSocketMessageType Type  { get; set; }
+        public string Data  { get; set; }
+        
+        public string Error  { get; set; }
     }
 }

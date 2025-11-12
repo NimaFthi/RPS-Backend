@@ -1,6 +1,6 @@
 namespace RPS_Backend.WebSocket;
 
-public enum WebSocketMessageTypes
+public enum WebSocketMessageType
 {
     Ping = 1,
     Pong = 2,

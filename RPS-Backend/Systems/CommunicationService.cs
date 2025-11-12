@@ -17,35 +17,36 @@ public class CommunicationService
     {
         switch (message.Type)
         {
-            case WebSocketMessageTypes.GetInitData:
+            case WebSocketMessageType.GetInitData:
                 break;
-            case WebSocketMessageTypes.GetUserProfile:
+            case WebSocketMessageType.GetUserProfile:
                 var userProfile = await _userService.GetUserProfileByGuidAsync(Guid.Parse((ReadOnlySpan<char>)connectionId));
                 var json = JsonConvert.SerializeObject(userProfile);
                 var jsonMessage = new WebSocketServer.WebSocketMessage
                 {
-                    Type = WebSocketMessageTypes.GetUserProfile,
+                    RequestID = message.RequestID,
+                    Type = WebSocketMessageType.GetUserProfile,
                     Data = json
                 };
                 await webSocketServer.SendMessageAsync(connectionId, JsonConvert.SerializeObject(jsonMessage));
                 break;
-            case WebSocketMessageTypes.RequestMatch:
+            case WebSocketMessageType.RequestMatch:
                 break;
-            case WebSocketMessageTypes.CancelMatch:
+            case WebSocketMessageType.CancelMatch:
                 break;
-            case WebSocketMessageTypes.MatchFound:
+            case WebSocketMessageType.MatchFound:
                 break;
-            case WebSocketMessageTypes.LeaveMatch:
+            case WebSocketMessageType.LeaveMatch:
                 break;
-            case WebSocketMessageTypes.StartMatch:
+            case WebSocketMessageType.StartMatch:
                 break;
-            case WebSocketMessageTypes.EndMatch:
+            case WebSocketMessageType.EndMatch:
                 break;
-            case WebSocketMessageTypes.StartRound:
+            case WebSocketMessageType.StartRound:
                 break;
-            case WebSocketMessageTypes.RoundResult:
+            case WebSocketMessageType.RoundResult:
                 break;
-            case WebSocketMessageTypes.Move:
+            case WebSocketMessageType.Move:
                 break;
         }
     }
