@@ -23,7 +23,7 @@ public class CommunicationService
         switch (message.Type)
         {
             case WebSocketMessageType.GetInitData:
-                var initData = await  _getInitDataService.GetInitData();
+                var initData = await _getInitDataService.GetInitData();
                 json = JsonConvert.SerializeObject(initData);
                 break;
             case WebSocketMessageType.GetUserProfile:
@@ -55,7 +55,7 @@ public class CommunicationService
         var respondMessage = new WebSocketServer.WebSocketMessage
         {
             RequestID = message.RequestID,
-            Type = WebSocketMessageType.GetUserProfile,
+            Type = message.Type,
             Data = json
         };
         await webSocketServer.SendMessageAsync(connectionId, JsonConvert.SerializeObject(respondMessage));
